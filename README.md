@@ -3,6 +3,7 @@
 Prunes Google Container Registry images by
 
 - a) deleting older than DELETE_OLDER_THAN=2020-01-01
+- AND
 - b) keeping only last KEEP_DIGESTS=3 tags
 
 run locally:
