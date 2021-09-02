@@ -24,9 +24,11 @@ _cleanup() {
   if [ "$tags" = "" ]; then
     echo "DELETE $1"
     sed_trim=""
+    keep_digests=0
   else
     echo "PRUNE  $1"
-    sed_trim="1,${KEEP_DIGESTS}d"
+    keep_digests=$KEEP_DIGESTS
+    sed_trim="1,${keep_digests}d"
   fi
 
   digests=$(gcloud container images list-tags \
@@ -34,7 +36,7 @@ _cleanup() {
     --sort-by="~timestamp" --format='get(digest)' \
     | sed "$sed_trim")
 
-  if [ $(echo "$digests" | wc -l) -gt ${KEEP_DIGESTS} ]; then
+  if [ $(echo "$digests" | wc -l) -gt ${keep_digests} ]; then
     for digest in $digests; do
       echo "'${1}@${digest}'"
     done | xargs -n 1 -P "$GCLOUD_CONCURRENCY" -- gcloud container images delete -q --force-delete-tags
