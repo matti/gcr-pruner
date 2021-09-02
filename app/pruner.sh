@@ -19,24 +19,14 @@ _cleanup() {
     _cleanup $image
   done
 
-  tags=$(2>/dev/null gcloud container images list-tags --quiet --project "$PROJECT" "$1" --filter="timestamp.datetime >= ${DELETE_OLDER_THAN}")
-
-  if [ "$tags" = "" ]; then
-    echo "DELETE $1"
-    sed_trim=""
-    keep_digests=0
-  else
-    echo "PRUNE  $1"
-    keep_digests=$KEEP_DIGESTS
-    sed_trim="1,${keep_digests}d"
-  fi
-
+  echo "$1"
   digests=$(gcloud container images list-tags \
     --quiet --project "$PROJECT" "$1" \
     --sort-by="~timestamp" --format='get(digest)' \
-    | sed "$sed_trim")
+    --filter="timestamp.datetime < ${DELETE_OLDER_THAN}" \
+    | sed "1,${KEEP_DIGESTS}d")
 
-  if [ $(echo "$digests" | wc -l) -gt ${keep_digests} ]; then
+  if [ $(echo "$digests" | sed '/^\s*$/d' | wc -l) -ge ${KEEP_DIGESTS} ]; then
     for digest in $digests; do
       echo "'${1}@${digest}'"
     done | xargs -n 1 -P "$GCLOUD_CONCURRENCY" -- gcloud container images delete -q --force-delete-tags
