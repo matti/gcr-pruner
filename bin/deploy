@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+docker build . -t $2
+docker push $2
+
+gcloud run deploy gcr-pruner --image $2 --project $1 --region $3 \
+  --allow-unauthenticated \
+  --cpu=4 \
+  --memory=2Gi \
+  --max-instances=1 \
+  --timeout=3600 \
+  --concurrency=1 \
+  --set-env-vars=PROJECTS="$PROJECTS" \
+  --set-env-vars=DELETE_OLDER_THAN="$DELETE_OLDER_THAN" \
+  --set-env-vars=KEEP_DIGESTS="$KEEP_DIGESTS" \
+  --set-env-vars=GCLOUD_CONCURRENCY="$GCLOUD_CONCURRENCY"
