@@ -20,11 +20,17 @@ _cleanup() {
   done
 
   echo "$1"
+  if [ "$KEEP_DIGESTS" = "0" ]; then
+    sed_filter=""
+  else
+    sed_filter="1,${KEEP_DIGESTS}d"
+  fi
+
   digests=$(gcloud container images list-tags \
     --quiet --project "$PROJECT" "$1" \
     --sort-by="~timestamp" --format='get(digest)' \
     --filter="timestamp.datetime < ${DELETE_OLDER_THAN}" \
-    | sed "1,${KEEP_DIGESTS}d")
+    | sed $sed_filter)
 
   if [ $(echo "$digests" | sed '/^\s*$/d' | wc -l) -ge ${KEEP_DIGESTS} ]; then
     for digest in $digests; do
