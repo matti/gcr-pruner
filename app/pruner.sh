@@ -13,13 +13,37 @@ _term() {
 
 trap _term TERM INT
 
+MATCH=${MATCH:-}
+DELETE_OLDER_THAN=${DELETE_OLDER_THAN:-$(date '+%Y-%m-%d')}
+KEEP_DIGESTS=${KEEP_DIGESTS:-2}
+GCLOUD_CONCURRENCY=${GCLOUD_CONCURRENCY:-16}
+
+echo "PROJECTS: $PROJECTS"
+echo "MATCH: $MATCH"
+echo "DELETE_OLDER_THAN: $DELETE_OLDER_THAN"
+echo "KEEP_DIGESTS: $KEEP_DIGESTS"
+echo "GCLOUD_CONCURRENCY: $GCLOUD_CONCURRENCY"
+
 _cleanup() {
   images=$(gcloud container images list --repository "$1" --format='value(name)')
   for image in $images; do
     _cleanup $image
   done
 
+  if [[ "$MATCH" != "" ]]; then
+    case "$1" in
+      *$MATCH*)
+        echo "'$1' matches '$MATCH'"
+      ;;
+      *)
+        echo "'$1' does not match '$MATCH'"
+        return
+      ;;
+    esac
+  fi
+
   echo "$1"
+
   if [ "$KEEP_DIGESTS" = "0" ]; then
     sed_filter=""
   else
