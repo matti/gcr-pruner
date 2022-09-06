@@ -13,11 +13,18 @@ _term() {
 
 trap _term TERM INT
 
+echo "gcr-pruner v1"
+
 MATCH=${MATCH:-}
-DELETE_OLDER_THAN=${DELETE_OLDER_THAN:-$(date '+%Y-%m-%d')}
 KEEP_DIGESTS=${KEEP_DIGESTS:-2}
 GCLOUD_CONCURRENCY=${GCLOUD_CONCURRENCY:-16}
 
+if [ "${DELETE_OLDER_THAN:-}" == "" ]; then
+  echo "setting DELETE_OLDER_THAN to tomorrow, will still keep KEEP_DIGESTS=${KEEP_DIGESTS}"
+  DELETE_OLDER_THAN=$(date -d '+1 day' '+%Y-%m-%d')
+fi
+
+echo "envs:"
 echo "PROJECTS: $PROJECTS"
 echo "MATCH: $MATCH"
 echo "DELETE_OLDER_THAN: $DELETE_OLDER_THAN"
@@ -75,4 +82,4 @@ for PROJECT in $PROJECTS; do
 done
 
 echo
-echo "DONE"
+echo "DONE, took: $SECONDS"

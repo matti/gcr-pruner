@@ -9,13 +9,14 @@ docker build . -t "$image"
 docker push "$image"
 
 MATCH=${MATCH:-}
-DELETE_OLDER_THAN=${DELETE_OLDER_THAN:-$(date '+%Y-%m-%d')}
+DELETE_OLDER_THAN=${DELETE_OLDER_THAN:-}
 KEEP_DIGESTS=${KEEP_DIGESTS:-2}
 GCLOUD_CONCURRENCY=${GCLOUD_CONCURRENCY:-16}
 
+set -x
 gcloud run deploy gcr-pruner --image "$image" --project "$project" --region "$region" \
   --allow-unauthenticated \
-  --cpu=2 \
+  --cpu=1 \
   --memory=1Gi \
   --max-instances=1 \
   --timeout=600 \
